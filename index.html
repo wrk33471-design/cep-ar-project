@@ -2,132 +2,185 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <title>Web AR Mascot Camera</title>
-    <!-- โหลดไลบรารีเวอร์ชันเสถียรผ่าน CDN ที่ปลอดภัย -->
-    <script src="https://aframe.io"></script>
-    <script src="https://githack.com"></script>
-    <script src="https://hertzen.com"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mascot Photo Camera</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #000; }
-        /* หน้าจอเลือกตัวละคร */
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        
+        /* กล้องวิดีโอสด */
+        #webcam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        
+        /* ตัวละครมาสคอตที่ลากวางได้ */
+        #mascot-element { 
+            position: absolute; top: 35%; left: 35%; width: 150px; height: auto; 
+            z-index: 5; cursor: move; user-select: none; touch-action: none; display: none;
+        }
+
+        /* เมนูเลือกตัวละครตอนเริ่มต้น */
         #selection-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 999;
+            background: rgba(0,0,0,0.85); z-index: 99;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .btn-select {
             padding: 15px 30px; margin: 12px; font-size: 18px; font-weight: bold; cursor: pointer;
-            border: none; border-radius: 25px; background: #007bff; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+            border: none; border-radius: 25px; background: #007bff; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.4);
         }
-        /* ปุ่มควบคุม */
+
+        /* แผงปุ่มควบคุม */
         #ui-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 20px; align-items: center; }
-        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; }
-        #capture-btn { background: #ff4757; color: white; width: 65px; height: 65px; font-size: 26px; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; }
+        #capture-btn { background: #ff4757; color: white; width: 68px; height: 68px; font-size: 28px; box-shadow: 0 4px 15px rgba(255,71,87,0.5); }
+        
+        /* ซ่อน Canvas รับภาพตอนเซฟ */
+        #merge-canvas { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 1. หน้าจอเลือกตัวละคร -->
+    <!-- 1. ตัวเล่นกล้องสดหลังจอ -->
+    <video id="webcam" autoplay playsinline muted></video>
+
+    <!-- 2. ตัวละคร PNG ที่แสดงบนหน้าจอ -->
+    <img id="mascot-element" src="" alt="Mascot">
+
+    <!-- 3. หน้าจอเลือกตัวละครเริ่มต้น -->
     <div id="selection-screen">
-        <h2 style="color: white; margin-bottom: 20px; text-align: center;">เลือกตัวละครมาสคอต</h2>
-        <button class="btn-select" onclick="selectMascot('mascot1')">ตัวละครที่ 1</button>
-        <button class="btn-select" onclick="selectMascot('mascot2')">ตัวละครที่ 2</button>
+        <h2 style="color: white; margin-bottom: 25px; text-align: center; letter-spacing: 1px;">เลือกตัวละครมาสคอต</h2>
+        <!-- 💡 ใส่ชื่อไฟล์รูปภาพ PNG ของคุณที่ปุ่มตรงนี้ได้เลย -->
+        <button class="btn-select" onclick="startCamera('cepar.png')">ตัวละครที่ 1</button>
+        <button class="btn-select" onclick="startCamera('as.png')">ตัวละครที่ 2</button>
     </div>
 
-    <!-- 2. ปุ่มควบคุมบนหน้าจอ -->
+    <!-- 4. แผงควบคุม (ย่อขยาย / ถ่ายรูป) -->
     <div id="ui-container" style="display: none;">
-        <button class="control-btn" onclick="adjustSize(0.1)">➕</button>
+        <button class="control-btn" onclick="adjustSize(1.1)">➕</button>
         <button class="control-btn" id="capture-btn" onclick="takeSnapshot()">📸</button>
-        <button class="control-btn" onclick="adjustSize(-0.1)">➖</button>
+        <button class="control-btn" onclick="adjustSize(0.9)">➖</button>
     </div>
 
-    <!-- 3. ส่วนแสดงผล AR -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" vr-mode-ui="enabled: false">
-        
-        <!-- 💡 ใส่ชื่อไฟล์รูปภาพ PNG ของคุณที่นี่ -->
-        <a-assets>
-            <img id="image1" src="cepar.png">
-            <img id="image2" src="cepar.png">
-        </a-assets>
-
-        <!-- ตัวรองรับรูปภาพ PNG (ปรับให้อยู่ระดับสายตาพอดี) -->
-        
-            <a-image id="active-mascot" src="" width="1" height="1" material="transparent: true; shader: flat; side: double;"></a-image>
-        
-
-        
-    </a-scene>
+    <!-- Canvas สำหรับประมวลผลรูปถ่าย (รวมร่างกล้อง + ตัวมาสคอต) -->
+    <canvas id="merge-canvas"></canvas>
 
     <script>
-        let currentScale = 15;
-        const mascotContainer = document.getElementById('mascot-container');
-        const activeMascot = document.getElementById('active-mascot');
+        const video = document.getElementById('webcam');
+        const mascot = document.getElementById('mascot-element');
+        const selectionScreen = document.getElementById('selection-screen');
+        const uiContainer = document.getElementById('ui-container');
+        const canvas = document.getElementById('merge-canvas');
 
-        // รีเควสขอเปิดกล้องทันทีที่โหลดหน้าเว็บเพื่อป้องกันจอขาว
-        window.addEventListener('load', () => {
-            navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => { console.log("เข้าถึงกล้องสำเร็จ"); })
-            .catch((err) => { alert("กรุณาอนุญาตให้เข้าถึงกล้องถ่ายรูป เพื่อใช้งานระบบ AR ครับ"); });
-        });
+        let currentWidth = 150; // ขนาดเริ่มต้นมาสคอต (พิกเซล)
 
-        function selectMascot(type) {
-            document.getElementById('selection-screen').style.display = 'none';
-            document.getElementById('ui-container').style.display = 'flex';
-            mascotContainer.style.display = 'block';
-
-            if (type === 'mascot1') {
-                activeMascot.setAttribute('src', '#image1');
-            } else {
-                activeMascot.setAttribute('src', '#image2');
+        // ฟังก์ชันเริ่มต้นระบบกล้องและเลือกตัวละคร
+        async function startCamera(imageSrc) {
+            try {
+                // เรียกเปิดกล้องมือถือ/คอมพิวเตอร์
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }, // บังคับใช้กล้องหลังมือถือ
+                    audio: false
+                });
+                video.srcObject = stream;
+                
+                // ตั้งค่ารูปภาพตัวละคร
+                mascot.src = imageSrc;
+                mascot.style.display = "block";
+                
+                // สลับการแสดงผลหน้าจอ
+                selectionScreen.style.display = "none";
+                uiContainer.style.display = "flex";
+            } catch (err) {
+                alert("ไม่สามารถเข้าถึงกล้องได้: กรุณาอนุญาตสิทธิ์การเข้าถึงกล้องถ่ายรูป หรือตรวจสอบว่าเว็บของคุณเป็น HTTPS แล้ว");
+                console.error(err);
             }
         }
 
-        function adjustSize(amount) {
-            currentScale += (amount * 10);
-            if(currentScale < 2) currentScale = 2; 
-            mascotContainer.setAttribute('scale', `${currentScale} ${currentScale} 1`);
+        // ฟังก์ชัน ย่อ - ขยาย ขนาดมาสคอต
+        function adjustSize(factor) {
+            currentWidth = currentWidth * factor;
+            if(currentWidth < 50) currentWidth = 50; // ล็อกขนาดเล็กสุด
+            if(currentWidth > 500) currentWidth = 500; // ล็อกขนาดใหญ่สุด
+            mascot.style.width = currentWidth + "px";
         }
 
-        // ระบบลากนิ้วเลื่อนตำแหน่งตัวละครแบบสัมผัสบนมือถือ
+        // ระบบจับนิ้วลาก/เมาส์ลากย้ายตำแหน่งมาสคอตแบบอิสระบนจอ
         let isDragging = false;
-        let previousTouchPosition = { x: 0, y: 0 };
+        let offsetX, offsetY;
 
-        window.addEventListener('touchstart', (e) => {
+        mascot.addEventListener('pointerdown', (e) => {
             isDragging = true;
-            previousTouchPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            offsetX = e.clientX - mascot.offsetLeft;
+            offsetY = e.clientY - mascot.offsetTop;
+            mascot.setPointerCapture(e.pointerId);
         });
 
-        window.addEventListener('touchmove', (e) => {
+        mascot.addEventListener('pointermove', (e) => {
             if (!isDragging) return;
+            let x = e.clientX - offsetX;
+            let y = e.clientY - offsetY;
             
-            let deltaX = e.touches[0].clientX - previousTouchPosition.x;
-            let deltaY = e.touches[0].clientY - previousTouchPosition.y;
+            // จำกัดพื้นที่ไม่ให้ลากทะลุขอบจอ
+            if(x < 0) x = 0;
+            if(y < 0) y = 0;
+            if(x > window.innerWidth - mascot.clientWidth) x = window.innerWidth - mascot.clientWidth;
+            if(y > window.innerHeight - mascot.clientHeight) y = window.innerHeight - mascot.clientHeight;
 
-            let currentPos = mascotContainer.getAttribute('position');
-            mascotContainer.setAttribute('position', {
-                x: currentPos.x + (deltaX * 0.05),
-                y: currentPos.y - (deltaY * 0.05),
-                z: currentPos.z
-            });
-
-            previousTouchPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            mascot.style.left = x + 'px';
+            mascot.style.top = y + 'px';
         });
 
-        window.addEventListener('touchend', () => { isDragging = false; });
+        mascot.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            mascot.releasePointerCapture(e.pointerId);
+        });
 
+        // 📸 ฟังก์ชันรวมภาพและแคปภาพหน้าจอลงเครื่องอัตโนมัติ
         function takeSnapshot() {
-            document.getElementById('ui-container').style.display = 'none';
-            setTimeout(() => {
-                html2canvas(document.body).then(canvas => {
-                    let link = document.createElement('a');
-                    link.download = 'mascot-snapshot.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    document.getElementById('ui-container').style.display = 'flex';
-                });
-            }, 300);
+            // ตั้งค่าขนาด Canvas ให้ตรงกับขนาดหน้าจอจริงที่ผู้ใช้เห็น
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+
+            // 1. วาดรูปจากกล้องวิดีโอสดลงไปใน Canvas ก่อน
+            // คำนวณแบบ object-fit: cover เพื่อไม่ให้ภาพกล้องบดบังบิดเบี้ยว
+            let videoWidth = video.videoWidth;
+            let videoHeight = video.videoHeight;
+            let screenRatio = canvas.width / canvas.height;
+            let videoRatio = videoWidth / videoHeight;
+            let sx, sy, sw, sh;
+
+            if (videoRatio > screenRatio) {
+                sh = videoHeight;
+                sw = videoHeight * screenRatio;
+                sx = (videoWidth - sw) / 2;
+                sy = 0;
+            } else {
+                sw = videoWidth;
+                sh = videoWidth / screenRatio;
+                sx = 0;
+                sy = (videoHeight - sh) / 2;
+            }
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+            // 2. วาดตัวละครมาสคอตทับลงไปตามพิกเซลที่ลากวางไว้เป๊ะๆ
+            const mascotImg = new Image();
+            mascotImg.src = mascot.src;
+            mascotImg.onload = function() {
+                ctx.drawImage(
+                    mascotImg, 
+                    mascot.offsetLeft, 
+                    mascot.offsetTop, 
+                    mascot.clientWidth, 
+                    mascot.clientHeight
+                );
+
+                // 3. แปลงข้อมูล Canvas ออกมาเป็นไฟล์ภาพแล้วดาวน์โหลดลงเครื่องทันที
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'mascot-photo-' + Date.now() + '.png'; // ตั้งชื่อรูปภาพตามเวลาที่กดถ่าย
+                link.href = dataUrl;
+                link.click();
+            };
         }
     </script>
 </body>
