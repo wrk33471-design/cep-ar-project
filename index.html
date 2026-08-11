@@ -1,119 +1,138 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-
-  <meta name="viewport"
-        content="width=device-width,
-        initial-scale=1.0,
-        maximum-scale=1.0,
-        user-scalable=no">
-
-  <title>AR Mascot</title>
-
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    #info {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-
-      background: rgba(0,0,0,0.7);
-      color: white;
-
-      padding: 10px 20px;
-      border-radius: 10px;
-
-      font-size: 16px;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Web AR Mascot Camera</title>
+    <!-- โหลดไลบรารีสำหรับทำ AR และระบบสัมผัส -->
+    <script src="https://aframe.io"></script>
+    <script src="https://githack.com"></script>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://hertzen.com"></script>
+    
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        /* เมนูเลือกตัวละครตอนเริ่มต้น */
+        #selection-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .btn-select {
+            padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer;
+            border: none; border-radius: 25px; background: #007bff; color: white;
+        }
+        /* ปุ่มควบคุมบนหน้าจอ AR */
+        #ui-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 15px; }
+        .control-btn { padding: 12px; border-radius: 50%; border: none; background: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #capture-btn { background: #ff4757; color: white; width: 60px; height: 60px; border-radius: 50%; font-size: 24px; }
+    </style>
 </head>
-
 <body>
 
-  <div id="info">
-    กำลังโหลด AR...
-  </div>
+    <!-- 1. หน้าจอเลือกตัวละคร (Mascot Selection) -->
+    <div id="selection-screen">
+        <h2 style="color: white;">เลือกตัวละครมาสคอตของคุณ</h2>
+        <button class="btn-select" onclick="selectMascot('mascot1')">ตัวละครที่ 1 (ปีขาล/เสือ)</button>
+        <button class="btn-select" onclick="selectMascot('mascot2')">ตัวละครที่ 2 (ปีเถาะ/กระต่าย)</button>
+    </div>
 
-  <a-scene
-    mindar-image="
-      imageTargetSrc: ./gg.mind;
-      filterMinCF: 0.0001;
-      filterBeta: 0.001;
-    "
-    color-space="sRGB"
-    renderer="colorManagement: true"
-    embedded
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
+    <!-- 2. ปุ่มควบคุมและปุ่มถ่ายรูป -->
+    <div id="ui-container" style="display: none;">
+        <button class="control-btn" onclick="adjustSize(0.1)">➕</button>
+        <button class="control-btn" id="capture-btn" onclick="takeSnapshot()">📸</button>
+        <button class="control-btn" onclick="adjustSize(-0.1)">➖</button>
+    </div>
 
-    <a-assets>
-      <img
-        id="mascot"
-        src="./cepar.png"
-        crossorigin="anonymous">
-    </a-assets>
+    <!-- 3. ส่วนแสดงผล AR (ใช้กล้องมือถือส่องรอบตัวแบบไม่ต้องมี Marker) -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+        
+        <!-- โมเดล 3D ของตัวละคร (เตรียมไว้รอเรียกใช้งาน) -->
+        <a-assets>
+            <!-- ใส่ลิงก์ไฟล์โมเดล 3D (.gltf หรือ .glb) ของคุณที่นี่ -->
+            <a-asset-item id="model1" src="cepar.png"></a-asset-item>
+            
+        </a-assets>
 
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false">
-    </a-camera>
+        <!-- จุดวางตัวละคร (Camera-Relative Container) -->
+        
+            
+        
 
-    <a-entity mindar-image-target="targetIndex: 0">
+        
+    </a-scene>
 
-      <!-- มาสคอต PNG -->
-      <a-image
-  id="mascotObject"
-  src="#mascot"
-  position="0 0 0.1"
-  width="0.5"
-  height="0.8"
-  material="
-    transparent: true;
-    alphaTest: 0.01;
-  ">
-</a-image>
+    <script>
+        let currentScale = 1;
+        const mascotContainer = document.getElementById('mascot-container');
+        const activeMascot = document.getElementById('active-mascot');
 
-    </a-entity>
+        // ฟังก์ชันเลือกตัวละคร
+        function selectMascot(type) {
+            document.getElementById('selection-screen').style.display = 'none';
+            document.getElementById('ui-container').style.display = 'flex';
+            mascotContainer.style.display = 'block';
 
-  </a-scene>
+            if (type === 'mascot1') {
+                activeMascot.setAttribute('gltf-model', '#model1');
+            } else {
+                activeMascot.setAttribute('gltf-model', '#model2');
+            }
+        }
 
-  <script>
+        // ฟังก์ชันย่อ-ขยายตัวละคร
+        function adjustSize(amount) {
+            currentScale += amount;
+            if(currentScale < 0.2) currentScale = 0.2; // จำกัดขนาดต่ำสุด
+            mascotContainer.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+        }
 
-    const scene =
-      document.querySelector("a-scene");
+        // ฟังก์ชันลากเปลี่ยนตำแหน่งตัวละครแบบง่าย (Touch Interaction)
+        let isDragging = false;
+        let previousTouchPosition = { x: 0, y: 0 };
 
-    const info =
-      document.getElementById("info");
+        window.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            previousTouchPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        });
 
-    scene.addEventListener(
-      "loaded",
-      function() {
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            let deltaX = e.touches[0].clientX - previousTouchPosition.x;
+            let deltaY = e.touches[0].clientY - previousTouchPosition.y;
 
-        info.innerHTML =
-          "อนุญาตให้ใช้กล้อง แล้วส่องไปที่ป้าย";
+            // ปรับตำแหน่งตัวละคร (X, Y) ตามนิ้วมือที่ลาก
+            let currentPos = mascotContainer.getAttribute('position');
+            mascotContainer.setAttribute('position', {
+                x: currentPos.x + (deltaX * 0.01),
+                y: currentPos.y - (deltaY * 0.01),
+                z: currentPos.z
+            });
 
-      }
-    );
+            previousTouchPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        });
 
-  </script>
+        window.addEventListener('touchend', () => { isDragging = false; });
 
+        // ฟังก์ชันกดถ่ายรูป (Capture หน้าจอ)
+        function takeSnapshot() {
+            // ซ่อนปุ่มกดชั่วคราวก่อนกดถ่าย
+            document.getElementById('ui-container').style.display = 'none';
+
+            setTimeout(() => {
+                html2canvas(document.body).then(canvas => {
+                    // แปลงรูปภาพเป็นลิงก์ดาวน์โหลด
+                    let link = document.createElement('a');
+                    link.download = 'ar-snapshot.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    
+                    // แสดงปุ่มกลับมาเหมือนเดิม
+                    document.getElementById('ui-container').style.display = 'flex';
+                });
+            }, 300);
+        }
+    </script>
 </body>
 </html>
