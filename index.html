@@ -3,189 +3,1037 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mascot Photo Camera</title>
+
+    <title>Mascot AR</title>
+
     <style>
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
-        
-        /* กล้องวิดีโอสด */
-        #webcam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-        
-        /* ตัวละครมาสคอตที่ลากวางได้ */
-        #mascot-element { 
-            position: absolute; top: 35%; left: 35%; width: 150px; height: auto; 
-            z-index: 5; cursor: move; user-select: none; touch-action: none; display: none;
+        * {
+            box-sizing: border-box;
         }
 
-        /* เมนูเลือกตัวละครตอนเริ่มต้น */
-        #selection-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 99;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: sans-serif;
         }
+
+        /* =========================
+           กล้อง
+        ========================= */
+
+        #webcam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* =========================
+           มาสคอต
+        ========================= */
+
+        #mascot-element {
+            position: absolute;
+
+            top: 35%;
+            left: 35%;
+
+            width: 150px;
+            height: auto;
+
+            z-index: 5;
+
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+
+            display: none;
+        }
+
+        /* =========================
+           หน้าหลัก
+        ========================= */
+
+        .screen {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0,0,0,0.88);
+
+            z-index: 99;
+
+            display: flex;
+            flex-direction: column;
+
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        .screen h1 {
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .screen p {
+            color: #ddd;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           ปุ่มเมนูหลัก
+        ========================= */
+
+        .main-btn {
+            width: 280px;
+
+            padding: 18px;
+
+            margin: 10px;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            border: none;
+            border-radius: 18px;
+
+            color: white;
+
+            cursor: pointer;
+
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .video-main {
+            background: #e74c3c;
+        }
+
+        .mascot-main {
+            background: #27ae60;
+        }
+
+        /* =========================
+           ปุ่มเลือกตัวละคร
+        ========================= */
+
+        #mascot-screen {
+            display: none;
+        }
+
         .btn-select {
-            padding: 15px 30px; margin: 12px; font-size: 18px; font-weight: bold; cursor: pointer;
-            border: none; border-radius: 25px; background: #007bff; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.4);
+            width: 280px;
+
+            padding: 13px 20px;
+
+            margin: 6px;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: #007bff;
+
+            color: white;
+
+            box-shadow: 0 4px 10px rgba(0,123,255,0.4);
         }
 
-        /* แผงปุ่มควบคุม */
-        #ui-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 20px; align-items: center; }
-        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; }
-        #capture-btn { background: #ff4757; color: white; width: 68px; height: 68px; font-size: 28px; box-shadow: 0 4px 15px rgba(255,71,87,0.5); }
-        
-        /* ซ่อน Canvas รับภาพตอนเซฟ */
-        #merge-canvas { display: none; }
+        /* =========================
+           หน้าวิดีโอ
+        ========================= */
+
+        #video-screen {
+            display: none;
+        }
+
+        .video-btn {
+            width: 280px;
+
+            padding: 14px;
+
+            margin: 6px;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: #e67e22;
+
+            color: white;
+
+            cursor: pointer;
+        }
+
+        /* =========================
+           ปุ่มกลับ
+        ========================= */
+
+        .back-btn {
+            margin-top: 20px;
+
+            padding: 10px 25px;
+
+            border: none;
+
+            border-radius: 20px;
+
+            background: #555;
+
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        /* =========================
+           แผงควบคุม
+        ========================= */
+
+        #ui-container {
+            position: fixed;
+
+            bottom: 30px;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 10;
+
+            display: none;
+
+            gap: 20px;
+
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+
+            border-radius: 50%;
+
+            border: none;
+
+            background: white;
+
+            font-size: 20px;
+
+            cursor: pointer;
+
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+        }
+
+        #capture-btn {
+            background: #ff4757;
+
+            color: white;
+
+            width: 68px;
+            height: 68px;
+
+            font-size: 28px;
+
+            box-shadow: 0 4px 15px rgba(255,71,87,0.5);
+        }
+
+        /* =========================
+           หน้าวิดีโอเล่น
+        ========================= */
+
+        #video-player-screen {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0,0,0,0.95);
+
+            z-index: 200;
+
+            display: none;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 15px;
+        }
+
+        #video-player {
+            width: 100%;
+            max-width: 800px;
+            max-height: 75vh;
+        }
+
+        /* =========================
+           Canvas
+        ========================= */
+
+        #merge-canvas {
+            display: none;
+        }
+
     </style>
 </head>
+
 <body>
 
-    <!-- 1. ตัวเล่นกล้องสดหลังจอ -->
+    <!-- =========================
+         กล้อง
+    ========================= -->
+
     <video id="webcam" autoplay playsinline muted></video>
 
-    <!-- 2. ตัวละคร PNG ที่แสดงบนหน้าจอ -->
-    <img id="mascot-element" src="" alt="Mascot">
 
-    <!-- 3. หน้าจอเลือกตัวละครเริ่มต้น -->
-    <div id="selection-screen">
-        <h2 style="color: white; margin-bottom: 25px; text-align: center; letter-spacing: 1px;">เลือกตัวละครมาสคอต</h2>
-        <!-- 💡 ใส่ชื่อไฟล์รูปภาพ PNG ของคุณที่ปุ่มตรงนี้ได้เลย -->
-        <button class="btn-select" onclick="startCamera('love.png')">Mr.Love</button>
-        <button class="btn-select" onclick="startCamera('like.png')">Mr.Like</button>
-        <button class="btn-select" onclick="startCamera('pml.png')">Mr.Pomelo</button>
-        <button class="btn-select" onclick="startCamera('cc.png')">Mr.Cocoa</button>
-        <button class="btn-select" onclick="startCamera('mon.png')">Mr.Mulberry</button>
-        <button class="btn-select" onclick="startCamera('p.png')">Mr.Egg drop</button>
+    <!-- =========================
+         ตัวละคร
+    ========================= -->
+
+    <img
+        id="mascot-element"
+        src=""
+        alt="Mascot"
+    >
+
+
+    <!-- =====================================================
+         หน้าแรก
+    ===================================================== -->
+
+    <div id="home-screen" class="screen">
+
+        <h1>AR MASCOT</h1>
+
+        <p>
+            เลือกสิ่งที่ต้องการ
+        </p>
+
+        <button
+            class="main-btn video-main"
+            onclick="openVideoMenu()">
+
+            🎬 ดูคลิปวิดีโอ
+
+        </button>
+
+
+        <button
+            class="main-btn mascot-main"
+            onclick="openMascotMenu()">
+
+            🧍 เล่นตัวละครมาสคอต
+
+        </button>
+
     </div>
 
-    <!-- 4. แผงควบคุม (ย่อขยาย / ถ่ายรูป) -->
-    <div id="ui-container" style="display: none;">
-        <button class="control-btn" onclick="adjustSize(1.1)">➕</button>
-        <button class="control-btn" id="capture-btn" onclick="takeSnapshot()">📸</button>
-        <button class="control-btn" onclick="adjustSize(0.9)">➖</button>
+
+    <!-- =====================================================
+         หน้าเลือกวิดีโอ
+    ===================================================== -->
+
+    <div id="video-screen" class="screen">
+
+        <h1>🎬 คลิปวิดีโอ</h1>
+
+        <p>
+            เลือกคลิปที่ต้องการรับชม
+        </p>
+
+
+        <button
+            class="video-btn"
+            onclick="playVideo('video1.mp4')">
+
+            🎬 คลิปที่ 1
+
+        </button>
+
+
+        <button
+            class="video-btn"
+            onclick="playVideo('video2.mp4')">
+
+            🎬 คลิปที่ 2
+
+        </button>
+
+
+        <button
+            class="video-btn"
+            onclick="playVideo('video3.mp4')">
+
+            🎬 คลิปที่ 3
+
+        </button>
+
+
+        <button
+            class="video-btn"
+            onclick="playVideo('video4.mp4')">
+
+            🎬 คลิปที่ 4
+
+        </button>
+
+
+        <button
+            class="back-btn"
+            onclick="backToHome()">
+
+            ← กลับ
+
+        </button>
+
     </div>
 
-    <!-- Canvas สำหรับประมวลผลรูปถ่าย (รวมร่างกล้อง + ตัวมาสคอต) -->
+
+    <!-- =====================================================
+         หน้าเลือกมาสคอต
+    ===================================================== -->
+
+    <div id="mascot-screen" class="screen">
+
+        <h1>🧍 เลือกตัวละครมาสคอต</h1>
+
+        <p>
+            เลือกตัวละครที่ต้องการ
+        </p>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('love.png')">
+
+            Mr.Love
+
+        </button>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('like.png')">
+
+            Mr.Like
+
+        </button>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('pml.png')">
+
+            Mr.Pomelo
+
+        </button>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('cc.png')">
+
+            Mr.Cocoa
+
+        </button>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('mon.png')">
+
+            Mr.Mulberry
+
+        </button>
+
+
+        <button
+            class="btn-select"
+            onclick="startCamera('p.png')">
+
+            Mr.Egg drop
+
+        </button>
+
+
+        <button
+            class="back-btn"
+            onclick="backToHome()">
+
+            ← กลับ
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         หน้าจอเล่นวิดีโอ
+    ===================================================== -->
+
+    <div id="video-player-screen">
+
+        <video
+            id="video-player"
+            controls
+            playsinline>
+        </video>
+
+
+        <button
+            class="back-btn"
+            onclick="closeVideo()">
+
+            ← กลับไปเลือกคลิป
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         ปุ่มควบคุมมาสคอต
+    ===================================================== -->
+
+    <div id="ui-container">
+
+        <button
+            class="control-btn"
+            onclick="adjustSize(1.1)">
+
+            ➕
+
+        </button>
+
+
+        <button
+            class="control-btn"
+            id="capture-btn"
+            onclick="takeSnapshot()">
+
+            📸
+
+        </button>
+
+
+        <button
+            class="control-btn"
+            onclick="adjustSize(0.9)">
+
+            ➖
+
+        </button>
+
+    </div>
+
+
+    <!-- Canvas -->
     <canvas id="merge-canvas"></canvas>
 
+
     <script>
-        const video = document.getElementById('webcam');
-        const mascot = document.getElementById('mascot-element');
-        const selectionScreen = document.getElementById('selection-screen');
-        const uiContainer = document.getElementById('ui-container');
-        const canvas = document.getElementById('merge-canvas');
 
-        let currentWidth = 150; // ขนาดเริ่มต้นมาสคอต (พิกเซล)
+        /* =====================================================
+           ตัวแปร
+        ===================================================== */
 
-        // ฟังก์ชันเริ่มต้นระบบกล้องและเลือกตัวละคร
+        const video =
+            document.getElementById('webcam');
+
+        const mascot =
+            document.getElementById('mascot-element');
+
+        const homeScreen =
+            document.getElementById('home-screen');
+
+        const videoScreen =
+            document.getElementById('video-screen');
+
+        const mascotScreen =
+            document.getElementById('mascot-screen');
+
+        const videoPlayerScreen =
+            document.getElementById('video-player-screen');
+
+        const videoPlayer =
+            document.getElementById('video-player');
+
+        const uiContainer =
+            document.getElementById('ui-container');
+
+        const canvas =
+            document.getElementById('merge-canvas');
+
+
+        /* =====================================================
+           ขนาดมาสคอต
+        ===================================================== */
+
+        let currentWidth = 150;
+
+
+        /* =====================================================
+           เปิดเมนูวิดีโอ
+        ===================================================== */
+
+        function openVideoMenu() {
+
+            homeScreen.style.display = "none";
+
+            videoScreen.style.display = "flex";
+
+        }
+
+
+        /* =====================================================
+           เปิดเมนูมาสคอต
+        ===================================================== */
+
+        function openMascotMenu() {
+
+            homeScreen.style.display = "none";
+
+            mascotScreen.style.display = "flex";
+
+        }
+
+
+        /* =====================================================
+           กลับหน้าหลัก
+        ===================================================== */
+
+        function backToHome() {
+
+            homeScreen.style.display = "flex";
+
+            videoScreen.style.display = "none";
+
+            mascotScreen.style.display = "none";
+
+        }
+
+
+        /* =====================================================
+           เปิดวิดีโอ
+        ===================================================== */
+
+        function playVideo(videoFile) {
+
+            videoPlayer.src = videoFile;
+
+            videoPlayerScreen.style.display = "flex";
+
+            videoPlayer.play();
+
+        }
+
+
+        /* =====================================================
+           ปิดวิดีโอ
+        ===================================================== */
+
+        function closeVideo() {
+
+            videoPlayer.pause();
+
+            videoPlayer.src = "";
+
+            videoPlayerScreen.style.display = "none";
+
+        }
+
+
+        /* =====================================================
+           เปิดกล้อง
+        ===================================================== */
+
         async function startCamera(imageSrc) {
+
             try {
-                // เรียกเปิดกล้องมือถือ/คอมพิวเตอร์
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" }, // บังคับใช้กล้องหลังมือถือ
-                    audio: false
-                });
+
+                const stream =
+                    await navigator.mediaDevices.getUserMedia({
+
+                        video: {
+                            facingMode: "environment"
+                        },
+
+                        audio: false
+
+                    });
+
+
                 video.srcObject = stream;
-                
-                // ตั้งค่ารูปภาพตัวละคร
+
+
+                /* ตั้งค่ารูปมาสคอต */
+
                 mascot.src = imageSrc;
+
                 mascot.style.display = "block";
-                
-                // สลับการแสดงผลหน้าจอ
-                selectionScreen.style.display = "none";
+
+
+                /* ซ่อนเมนู */
+
+                mascotScreen.style.display = "none";
+
+
+                /* แสดงปุ่มควบคุม */
+
                 uiContainer.style.display = "flex";
-            } catch (err) {
-                alert("ไม่สามารถเข้าถึงกล้องได้: กรุณาอนุญาตสิทธิ์การเข้าถึงกล้องถ่ายรูป หรือตรวจสอบว่าเว็บของคุณเป็น HTTPS แล้ว");
-                console.error(err);
+
+
+                /* รีเซ็ตขนาด */
+
+                currentWidth = 150;
+
+                mascot.style.width =
+                    currentWidth + "px";
+
+
+                /* ตำแหน่งเริ่มต้น */
+
+                mascot.style.left = "35%";
+
+                mascot.style.top = "35%";
+
+
             }
-        }
 
-        // ฟังก์ชัน ย่อ - ขยาย ขนาดมาสคอต
-        function adjustSize(factor) {
-            currentWidth = currentWidth * factor;
-            if(currentWidth < 50) currentWidth = 50; // ล็อกขนาดเล็กสุด
-            if(currentWidth > 500) currentWidth = 500; // ล็อกขนาดใหญ่สุด
-            mascot.style.width = currentWidth + "px";
-        }
+            catch (err) {
 
-        // ระบบจับนิ้วลาก/เมาส์ลากย้ายตำแหน่งมาสคอตแบบอิสระบนจอ
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        mascot.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - mascot.offsetLeft;
-            offsetY = e.clientY - mascot.offsetTop;
-            mascot.setPointerCapture(e.pointerId);
-        });
-
-        mascot.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            let x = e.clientX - offsetX;
-            let y = e.clientY - offsetY;
-            
-            // จำกัดพื้นที่ไม่ให้ลากทะลุขอบจอ
-            if(x < 0) x = 0;
-            if(y < 0) y = 0;
-            if(x > window.innerWidth - mascot.clientWidth) x = window.innerWidth - mascot.clientWidth;
-            if(y > window.innerHeight - mascot.clientHeight) y = window.innerHeight - mascot.clientHeight;
-
-            mascot.style.left = x + 'px';
-            mascot.style.top = y + 'px';
-        });
-
-        mascot.addEventListener('pointerup', (e) => {
-            isDragging = false;
-            mascot.releasePointerCapture(e.pointerId);
-        });
-
-        // 📸 ฟังก์ชันรวมภาพและแคปภาพหน้าจอลงเครื่องอัตโนมัติ
-        function takeSnapshot() {
-            // ตั้งค่าขนาด Canvas ให้ตรงกับขนาดหน้าจอจริงที่ผู้ใช้เห็น
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const ctx = canvas.getContext('2d');
-
-            // 1. วาดรูปจากกล้องวิดีโอสดลงไปใน Canvas ก่อน
-            // คำนวณแบบ object-fit: cover เพื่อไม่ให้ภาพกล้องบดบังบิดเบี้ยว
-            let videoWidth = video.videoWidth;
-            let videoHeight = video.videoHeight;
-            let screenRatio = canvas.width / canvas.height;
-            let videoRatio = videoWidth / videoHeight;
-            let sx, sy, sw, sh;
-
-            if (videoRatio > screenRatio) {
-                sh = videoHeight;
-                sw = videoHeight * screenRatio;
-                sx = (videoWidth - sw) / 2;
-                sy = 0;
-            } else {
-                sw = videoWidth;
-                sh = videoWidth / screenRatio;
-                sx = 0;
-                sy = (videoHeight - sh) / 2;
-            }
-            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-
-            // 2. วาดตัวละครมาสคอตทับลงไปตามพิกเซลที่ลากวางไว้เป๊ะๆ
-            const mascotImg = new Image();
-            mascotImg.src = mascot.src;
-            mascotImg.onload = function() {
-                ctx.drawImage(
-                    mascotImg, 
-                    mascot.offsetLeft, 
-                    mascot.offsetTop, 
-                    mascot.clientWidth, 
-                    mascot.clientHeight
+                alert(
+                    "ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้กล้อง และตรวจสอบว่าเว็บไซต์เป็น HTTPS"
                 );
 
-                // 3. แปลงข้อมูล Canvas ออกมาเป็นไฟล์ภาพแล้วดาวน์โหลดลงเครื่องทันที
-                const dataUrl = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'mascot-photo-' + Date.now() + '.png'; // ตั้งชื่อรูปภาพตามเวลาที่กดถ่าย
-                link.href = dataUrl;
-                link.click();
-            };
+                console.error(err);
+
+            }
+
         }
+
+
+        /* =====================================================
+           ย่อ / ขยาย
+        ===================================================== */
+
+        function adjustSize(factor) {
+
+            currentWidth =
+                currentWidth * factor;
+
+
+            if (currentWidth < 50) {
+
+                currentWidth = 50;
+
+            }
+
+
+            if (currentWidth > 500) {
+
+                currentWidth = 500;
+
+            }
+
+
+            mascot.style.width =
+                currentWidth + "px";
+
+        }
+
+
+        /* =====================================================
+           ระบบลากมาสคอต
+        ===================================================== */
+
+        let isDragging = false;
+
+        let offsetX = 0;
+
+        let offsetY = 0;
+
+
+        mascot.addEventListener(
+            'pointerdown',
+            (e) => {
+
+                isDragging = true;
+
+
+                offsetX =
+                    e.clientX -
+                    mascot.offsetLeft;
+
+
+                offsetY =
+                    e.clientY -
+                    mascot.offsetTop;
+
+
+                mascot.setPointerCapture(
+                    e.pointerId
+                );
+
+            }
+        );
+
+
+        mascot.addEventListener(
+            'pointermove',
+            (e) => {
+
+                if (!isDragging) return;
+
+
+                let x =
+                    e.clientX -
+                    offsetX;
+
+
+                let y =
+                    e.clientY -
+                    offsetY;
+
+
+                /* จำกัดไม่ให้ออกนอกจอ */
+
+                if (x < 0)
+                    x = 0;
+
+
+                if (y < 0)
+                    y = 0;
+
+
+                if (
+                    x >
+                    window.innerWidth -
+                    mascot.clientWidth
+                ) {
+
+                    x =
+                        window.innerWidth -
+                        mascot.clientWidth;
+
+                }
+
+
+                if (
+                    y >
+                    window.innerHeight -
+                    mascot.clientHeight
+                ) {
+
+                    y =
+                        window.innerHeight -
+                        mascot.clientHeight;
+
+                }
+
+
+                mascot.style.left =
+                    x + "px";
+
+
+                mascot.style.top =
+                    y + "px";
+
+            }
+        );
+
+
+        mascot.addEventListener(
+            'pointerup',
+            (e) => {
+
+                isDragging = false;
+
+                try {
+
+                    mascot.releasePointerCapture(
+                        e.pointerId
+                    );
+
+                }
+
+                catch (error) {}
+
+            }
+        );
+
+
+        /* =====================================================
+           ถ่ายรูป
+        ===================================================== */
+
+        function takeSnapshot() {
+
+            canvas.width =
+                window.innerWidth;
+
+            canvas.height =
+                window.innerHeight;
+
+
+            const ctx =
+                canvas.getContext('2d');
+
+
+            let videoWidth =
+                video.videoWidth;
+
+            let videoHeight =
+                video.videoHeight;
+
+
+            let screenRatio =
+                canvas.width /
+                canvas.height;
+
+
+            let videoRatio =
+                videoWidth /
+                videoHeight;
+
+
+            let sx, sy, sw, sh;
+
+
+            if (videoRatio > screenRatio) {
+
+                sh = videoHeight;
+
+                sw =
+                    videoHeight *
+                    screenRatio;
+
+                sx =
+                    (videoWidth - sw) / 2;
+
+                sy = 0;
+
+            }
+
+            else {
+
+                sw = videoWidth;
+
+                sh =
+                    videoWidth /
+                    screenRatio;
+
+                sx = 0;
+
+                sy =
+                    (videoHeight - sh) / 2;
+
+            }
+
+
+            ctx.drawImage(
+                video,
+                sx,
+                sy,
+                sw,
+                sh,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            const mascotImg =
+                new Image();
+
+
+            mascotImg.src =
+                mascot.src;
+
+
+            mascotImg.onload =
+                function() {
+
+                    ctx.drawImage(
+
+                        mascotImg,
+
+                        mascot.offsetLeft,
+
+                        mascot.offsetTop,
+
+                        mascot.clientWidth,
+
+                        mascot.clientHeight
+
+                    );
+
+
+                    const dataUrl =
+                        canvas.toDataURL(
+                            'image/png'
+                        );
+
+
+                    const link =
+                        document.createElement('a');
+
+
+                    link.download =
+                        'mascot-photo-' +
+                        Date.now() +
+                        '.png';
+
+
+                    link.href =
+                        dataUrl;
+
+
+                    link.click();
+
+                };
+
+        }
+
     </script>
+
 </body>
 </html>
