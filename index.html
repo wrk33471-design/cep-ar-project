@@ -34,6 +34,10 @@
             object-fit: cover;
             z-index: 1;
         }
+        /* กล้องหน้าแบบกระจก */
+#webcam.front-camera {
+    transform: scaleX(-1);
+}
 
         /* =========================
            มาสคอต
@@ -712,6 +716,15 @@
 
         video.srcObject = cameraStream;
 
+if (currentCamera === "user") {
+
+    video.classList.add("front-camera");
+
+} else {
+
+    video.classList.remove("front-camera");
+
+}
 
         // ตั้งค่ารูปมาสคอต
         mascot.src = imageSrc;
@@ -755,7 +768,6 @@
 }
         async function switchCamera() {
 
-    // เปลี่ยนกล้อง
     if (currentCamera === "environment") {
 
         currentCamera = "user";
@@ -766,10 +778,8 @@
 
     }
 
-
     try {
 
-        // หยุดกล้องเดิม
         if (cameraStream) {
 
             cameraStream
@@ -778,8 +788,6 @@
 
         }
 
-
-        // เปิดกล้องใหม่
         cameraStream =
             await navigator.mediaDevices.getUserMedia({
 
@@ -791,24 +799,35 @@
 
             });
 
+        video.srcObject = cameraStream;
 
-        video.srcObject =
-            cameraStream;
+
+        // =========================
+        // กล้องหน้า = ภาพสะท้อน
+        // กล้องหลัง = ภาพปกติ
+        // =========================
+
+        if (currentCamera === "user") {
+
+            video.classList.add("front-camera");
+
+        } else {
+
+            video.classList.remove("front-camera");
+
+        }
 
     }
 
     catch (err) {
 
-        alert(
-            "ไม่สามารถสลับกล้องได้"
-        );
+        alert("ไม่สามารถสลับกล้องได้");
 
         console.error(err);
 
     }
 
 }
-
 
         /* =====================================================
            ย่อ / ขยาย
