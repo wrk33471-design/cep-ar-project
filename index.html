@@ -534,34 +534,32 @@
 
     <div id="ui-container">
 
-        <button
-            class="control-btn"
-            onclick="adjustSize(1.1)">
+    <button
+        class="control-btn"
+        onclick="adjustSize(1.1)">
+        ➕
+    </button>
 
-            ➕
+    <button
+        class="control-btn"
+        onclick="switchCamera()">
+        🔄
+    </button>
 
-        </button>
+    <button
+        class="control-btn"
+        id="capture-btn"
+        onclick="takeSnapshot()">
+        📸
+    </button>
 
+    <button
+        class="control-btn"
+        onclick="adjustSize(0.9)">
+        ➖
+    </button>
 
-        <button
-            class="control-btn"
-            id="capture-btn"
-            onclick="takeSnapshot()">
-
-            📸
-
-        </button>
-
-
-        <button
-            class="control-btn"
-            onclick="adjustSize(0.9)">
-
-            ➖
-
-        </button>
-
-    </div>
+</div>
 
 
     <!-- Canvas -->
@@ -606,8 +604,11 @@
            ขนาดมาสคอต
         ===================================================== */
 
-        let currentWidth = 150;
+       let currentWidth = 150;
 
+        let currentCamera = "environment";
+
+        let cameraStream = null;
 
         /* =====================================================
            เปิดเมนูวิดีโอ
@@ -686,68 +687,127 @@
 
         async function startCamera(imageSrc) {
 
-            try {
+    try {
 
-                const stream =
-                    await navigator.mediaDevices.getUserMedia({
+        // หยุดกล้องเดิมก่อน
+        if (cameraStream) {
 
-                        video: {
-                            facingMode: "environment"
-                        },
-
-                        audio: false
-
-                    });
-
-
-                video.srcObject = stream;
-
-
-                /* ตั้งค่ารูปมาสคอต */
-
-                mascot.src = imageSrc;
-
-                mascot.style.display = "block";
-
-
-                /* ซ่อนเมนู */
-
-                mascotScreen.style.display = "none";
-
-
-                /* แสดงปุ่มควบคุม */
-
-                uiContainer.style.display = "flex";
-
-
-                /* รีเซ็ตขนาด */
-
-                currentWidth = 150;
-
-                mascot.style.width =
-                    currentWidth + "px";
-
-
-                /* ตำแหน่งเริ่มต้น */
-
-                mascot.style.left = "35%";
-
-                mascot.style.top = "35%";
-
-
-            }
-
-            catch (err) {
-
-                alert(
-                    "ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้กล้อง และตรวจสอบว่าเว็บไซต์เป็น HTTPS"
-                );
-
-                console.error(err);
-
-            }
+            cameraStream.getTracks().forEach(
+                track => track.stop()
+            );
 
         }
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+                    facingMode: currentCamera
+                },
+
+                audio: false
+
+            });
+
+
+        video.srcObject = cameraStream;
+
+
+        // ตั้งค่ารูปมาสคอต
+        mascot.src = imageSrc;
+
+        mascot.style.display = "block";
+
+
+        // ซ่อนเมนูเลือกตัวละคร
+        mascotScreen.style.display = "none";
+
+
+        // แสดงปุ่มควบคุม
+        uiContainer.style.display = "flex";
+
+
+        // รีเซ็ตขนาด
+        currentWidth = 150;
+
+        mascot.style.width =
+            currentWidth + "px";
+
+
+        // ตำแหน่งเริ่มต้น
+        mascot.style.left = "35%";
+
+        mascot.style.top = "35%";
+
+
+    }
+
+    catch (err) {
+
+        alert(
+            "ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง"
+        );
+
+        console.error(err);
+
+    }
+
+}
+        async function switchCamera() {
+
+    // เปลี่ยนกล้อง
+    if (currentCamera === "environment") {
+
+        currentCamera = "user";
+
+    } else {
+
+        currentCamera = "environment";
+
+    }
+
+
+    try {
+
+        // หยุดกล้องเดิม
+        if (cameraStream) {
+
+            cameraStream
+                .getTracks()
+                .forEach(track => track.stop());
+
+        }
+
+
+        // เปิดกล้องใหม่
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+                    facingMode: currentCamera
+                },
+
+                audio: false
+
+            });
+
+
+        video.srcObject =
+            cameraStream;
+
+    }
+
+    catch (err) {
+
+        alert(
+            "ไม่สามารถสลับกล้องได้"
+        );
+
+        console.error(err);
+
+    }
+
+}
 
 
         /* =====================================================
