@@ -1044,21 +1044,45 @@ if (currentCamera === "user") {
                 sy =
                     (videoHeight - sh) / 2;
 
-            }
+            // ถ้าเป็นกล้องหน้า ให้กลับภาพใน Canvas
+if (currentCamera === "user") {
 
+    ctx.save();
 
-            ctx.drawImage(
-                video,
-                sx,
-                sy,
-                sw,
-                sh,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+    // กลับภาพซ้าย-ขวาเหมือนที่เห็นบนจอ
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
 
+    ctx.drawImage(
+        video,
+        sx,
+        sy,
+        sw,
+        sh,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.restore();
+
+} else {
+
+    // กล้องหลัง = ภาพปกติ
+    ctx.drawImage(
+        video,
+        sx,
+        sy,
+        sw,
+        sh,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+}
 
             const mascotImg =
                 new Image();
